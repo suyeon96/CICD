@@ -54,7 +54,7 @@ pipeline {
                 echo "${env.BRANCH_NAME}"
                 echo "${params.Greeting} World"
                 echo "Clonning Repository' "
-                git url: 'https://github.com/frontalnh/cicd.git',
+                git url: 'https://github.com/suyeon96/CICD.git',
                     branch: "${env.BRANCH_NAME}",
                     credentialsId: 'jenkinsgit'
             }
