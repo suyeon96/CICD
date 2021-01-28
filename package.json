@@ -16,7 +16,9 @@
     "url": "https://github.com/suyeon96/CICD/issues"
   },
   "homepage": "https://github.com/suyeon96/CICD#readme",
-  "dependencies": {
-    "eslint": "^7.18.0"
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^7.18.0",
+    "jest": "^26.6.3"
   }
 }
