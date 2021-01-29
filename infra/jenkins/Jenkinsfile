@@ -4,34 +4,35 @@ pipeline {
   agent any
 
   parameters {
-      string(name: 'MYSQL_HOST', defaultValue: 'devMysql', description: 'dev mysql host')
-      string(name: 'MYSQL_PASSWORD', defaultValue: 'new1234!', description: 'dev mysql password')
+    string(name:'MYSQL_HOST', defaultValue: 'devMysql', description: 'dev mysql host'),
+    string(name:'MYSQL_PASSWORD', defaultValue: 'new1234!', description: 'dev mysql password')
   }
 
   stages {
     // branch명을 기준으로 배포할 환경 설정
     stage('Decide Deploy To') {
       steps {
-        scripts {
-          if(env.BRANCH_NAME == 'master') {
+        script {
+          if (env.BRANCH_NAME == 'master'){
             DEPLOY_TO = 'prod'
-          }else if(env.BRANCH_NAME == 'develop') {
+          } else if (env.BRANCH_NAME == 'develop'){
             DEPLOY_TO = 'dev'
-          }else if(env.BRANCH_NAME == 'qa') {
+          } else if (env.BRANCH_NAME == 'qa'){
             DEPLOY_TO = 'qa'
           }
         }
+        
         echo "DEPLOY_TO: ${DEPLOY_TO}"
       }
     }
-
+    
     // aws Parameter Store의 파라미터 정보 가져오기
     stage('Check deploy parameter') {
       steps {
-        scripts {
-          withAWS(region:'ap-northeast-2', credentials:'jenkinsaws'){
+        script {
+          withAWS(region:'ap-northeast-2', credentials:'jenkinsaws') {
             def mysql_host = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_HOST | jq '.Parameters[0].Value'", returnStdout: true).trim()
-            def params = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_PASSWORD | jq '.Parameters[0].Value'", returnStdout: true).trim()
+            def mysql_password = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_PASSWORD | jq '.Parameters[0].Value'", returnStdout: true).trim()
             echo "${mysql_host}"
           }
         }
