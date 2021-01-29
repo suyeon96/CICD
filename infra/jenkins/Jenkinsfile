@@ -38,8 +38,21 @@ pipeline {
       }
     }
 
+    stage('Build website') {
+      steps {
+        echo 'Build website'
+      }
+
+      post {
+        failure {
+          echo "Website Build Failed"
+        }
+      }
+
+    }
+
     stage('Deploy website') {
-      steps{
+      steps {
         dir ('./website') {
           script {
             withAWS(region:'ap-northeast-2', credentials:'jenkinsaws') {
@@ -50,6 +63,38 @@ pipeline {
           }
         }
       }
+
+      post {
+        success {
+          echo "Successfully Deployed Website In ${DEPLOY_TO} environment"
+        }
+        failure {
+          echo "Failed deploy website"
+          // 실패 시의 예외처리를 잘 해줘야함.
+        }
+      }
     }
+
+    stage('Build Server') {
+      steps {
+        dir('./server') {
+          script {
+            withAWS(region:'ap-northeast-2', credentials:'jenkinsaws') {
+              def login = ecrLogin()
+              def mysql_host = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_HOST | jq '.Parameters[0].Value'", returnStdout: true).trim()
+              def mysql_password = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_PASSWORD | jq '.Parameters[0].Value'", returnStdout: true).trim()
+              echo "${login}"
+              // 실제 로그인
+              sh "${login}"
+              sh """
+              docker build --build-arg env=${DEPLOY_TO} --build-arg mysqlHost=${mysql_host} --build-arg mysqlPassword=${mysql_password} -t 300265096721.dkr.ecr.ap-northeast-2.amazonaws.com/${DEPLOY_TO}-webserver .
+              docker push 300265096721.dkr.ecr.ap-northeast-2.amazonaws.com/${DEPLOY_TO}-webserver
+              """
+            }
+          }
+        }
+      }
+    }
+
   }
 }
