@@ -4,12 +4,13 @@ pipeline {
   agent any
 
   parameters {
-    string(name:'MYSQL_HOST', defaultValue: 'devMysql', description: 'dev mysql host'),
+    string(name:'MYSQL_HOST', defaultValue: 'devMysql', description: 'dev mysql host')
     string(name:'MYSQL_PASSWORD', defaultValue: 'new1234!', description: 'dev mysql password')
   }
 
   stages {
     // branch명을 기준으로 배포할 환경 설정
+    stages {
     stage('Decide Deploy To') {
       steps {
         script {
@@ -21,7 +22,6 @@ pipeline {
             DEPLOY_TO = 'qa'
           }
         }
-        
         echo "DEPLOY_TO: ${DEPLOY_TO}"
       }
     }
@@ -34,6 +34,20 @@ pipeline {
             def mysql_host = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_HOST | jq '.Parameters[0].Value'", returnStdout: true).trim()
             def mysql_password = sh(script: "aws ssm get-parameters --name /${DEPLOY_TO}/MYSQL_PASSWORD | jq '.Parameters[0].Value'", returnStdout: true).trim()
             echo "${mysql_host}"
+          }
+        }
+      }
+    }
+
+    stage('Deploy website') {
+      steps{
+        dir ('./website') {
+          script {
+            withAWS(region:'ap-northeast-2', credentials:'jenkinsaws') {
+              sh """
+              aws s3 sync ./ s3://${DEPLOY_TO}-suyeon-website
+              """
+            }
           }
         }
       }
