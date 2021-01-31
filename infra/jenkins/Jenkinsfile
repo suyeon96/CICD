@@ -97,6 +97,9 @@ pipeline {
     }
 
     stage('Deploy Server') {
+      agent {
+        label 'slave'
+      }
       steps {
         script {
           withAWS(region:'ap-northeast-2', credentials:'jenkinsaws') {
