@@ -1,7 +1,10 @@
 def DEPLOY_TO
 
 pipeline {
-  agent any
+  //agent any
+  agent {
+    label 'master'
+  }
 
   parameters {
     string(name:'MYSQL_HOST', defaultValue: 'devMysql', description: 'dev mysql host')
